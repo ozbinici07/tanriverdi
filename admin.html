@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tanrıverdi Döner - Canlı Yönetim Paneli</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sol Menü / Sekme Alanı */
+        .sidebar { width: 280px; background: #2c3e50; color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .sidebar h2 { font-size: 18px; margin-bottom: 20px; color: #ecf0f1; text-align: center; }
+        /* Tanrıverdi Döner - CSS Marka Bannerı */
+        .brand-banner {
+            position: relative;
+            width: 100%;
+            height: 175px;
+            box-sizing: border-box;
+            margin-bottom: 18px;
+            padding: 14px 15px;
+            overflow: hidden;
+            border: 1px solid rgba(230,171,52,.75);
+            border-radius: 16px;
+            background:
+                radial-gradient(circle at 88% 18%, rgba(229,83,52,.32), transparent 28%),
+                radial-gradient(circle at 12% 110%, rgba(231,76,60,.28), transparent 34%),
+                linear-gradient(135deg, #111820 0%, #182433 52%, #10151b 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.08);
+        }
+        .brand-banner::before {
+            content: '';
+            position: absolute;
+            width: 115px; height: 115px;
+            right: -42px; top: -48px;
+            border: 1px solid rgba(230,171,52,.22);
+            border-radius: 50%;
+            box-shadow: 0 0 0 16px rgba(230,171,52,.035), 0 0 0 32px rgba(230,171,52,.025);
+        }
+        .brand-banner::after {
+            content: '';
+            position: absolute;
+            left: 15px; right: 15px; bottom: 10px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(230,171,52,.7), transparent);
+        }
+        .brand-mark {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .brand-logo-img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
+        }
+        .brand-copy { display: none; }
+        .brand-features { display:none; }
+        .brand-feature { flex:1; min-width:0; padding:5px 4px; text-align:center; border-radius:6px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.08); color:#f2f4f6; font-size:8px; font-weight:800; white-space:nowrap; }
+        .brand-feature b { color:#e6ab34; font-size:10px; margin-right:2px; }
+        .brand-feature em { font-style:normal; }
+        
+        .menu-btn { background: transparent; color: #bdc3c7; border: none; padding: 15px; text-align: left; font-size: 16px; border-radius: 6px; cursor: pointer; margin-bottom: 10px; font-weight: bold; transition: 0.2s; width: 100%; }
+        .menu-btn:hover, .menu-btn.active { background: #e74c3c; color: white; }
+
+        .submenu-container { display: none; flex-direction: column; gap: 6px; margin-bottom: 15px; padding-left: 10px; border-left: 3px solid #34495e; }
+        .submenu-container.open { display: flex; }
+
+        .sub-menu-btn { background: #34495e; color: #bdc3c7; border: none; padding: 10px 12px; text-align: left; font-size: 14px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; width: 100%; }
+        .sub-menu-btn:hover, .sub-menu-btn.active { background: #16a085; color: white; }
+
+        /* Ana İçerik Alanı */
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        .header { background: #e74c3c; color: white; padding: 15px 25px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        #audio-start { padding: 10px 15px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .order-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); margin-top: 20px; border-left: 8px solid #e74c3c; animation: dikkat 1s infinite alternate; position: relative; }
+        .order-card.accepted { border-left-color: #2980b9; animation: none; box-shadow: 0 4px 15px rgba(41, 128, 185, 0.2); }
+        .order-card.delivered { border-left-color: #27ae60; animation: none; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2); }
+        .order-card.rejected { border-left-color: #95a5a6; opacity: 0.8; animation: none; box-shadow: 0 4px 15px rgba(149, 165, 166, 0.2); }
+        .order-card.onway { border-left-color: #f39c12; animation: none; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2); }
+
+        @keyframes dikkat { from { border-left-color: #e74c3c; } to { border-left-color: #f39c12; } }
+        
+        .order-info h3 { margin-top: 0; color: #c0392b; padding-right: 70px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .user-card-name { display: inline-flex; align-items: center; justify-content: flex-start; gap: 5px; margin: 0; }
+        .order-info p { margin: 6px 0; font-size: 15px; }
+        .order-products { background: #f9f9f9; padding: 12px; border-radius: 6px; margin: 12px 0; border: 1px dashed #ddd; white-space: pre-line; font-family: monospace; font-size: 14px; line-height: 1.4; color: #333; }
+        
+        .btn-delete-top { position: absolute; top: 20px; right: 20px; background: #e74c3c; color: white; border: none; padding: 6px 12px; font-size: 13px; border-radius: 5px; cursor: pointer; font-weight: bold; z-index: 10; }
+        .btn-delete-top:hover { background: #c0392b; }
+
+        .btn-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .btn-accept { background: #27ae60; color: white; border: none; padding: 10px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-reject { background: #c0392b; color: white; border: none; padding: 10px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-print { background: #2980b9; color: white; border: none; padding: 10px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-onway { background: #f39c12; color: white; border: none; padding: 10px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-delivered { background: #27ae60; color: white; border: none; padding: 10px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        .btn-shop-toggle { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.2); transition: 0.2s; }
+        .btn-shop-toggle.open { background: #27ae60; }
+        .btn-shop-toggle.closed { background: #c0392b; }
+
+        .revenue-header { background: #34495e; color: white; padding: 15px 25px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+
+        /* Not Defteri Düzenleme Alanları */
+        .editable-field {
+            background: #fffdf0;
+            border: 1px dashed #f39c12;
+            padding: 3px 6px;
+            border-radius: 4px;
+            outline: none;
+            display: inline-block;
+            min-width: 120px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        .editable-field:focus {
+            background: #fff;
+            border: 1px solid #e74c3c;
+            box-shadow: 0 0 5px rgba(231,76,60,0.3);
+        }
+
+        /* Geçmiş Sipariş Silme Satırı */
+        .history-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            transition: 0.2s;
+        }
+        .history-item-row:hover {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+        .btn-mini-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            font-size: 11px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-mini-delete:hover { background: #c0392b; }
+
+        /* Mobil yönetim paneli: sabit genişlik taşmasını önle */
+        @media (max-width: 700px) {
+            html, body {
+                height: auto;
+                min-height: 100%;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            body { display: block; }
+            .sidebar {
+                width: 100%;
+                box-sizing: border-box;
+                min-height: auto;
+                padding: 10px;
+                overflow: visible;
+            }
+            .brand-banner {
+                width: 100%;
+                height: 155px;
+                margin-bottom: 10px;
+                padding: 8px;
+                border-radius: 14px;
+            }
+            .brand-logo-img {
+                width: 100%;
+                height: 100%;
+            }
+            .menu-btn {
+                margin-bottom: 6px;
+                padding: 12px 13px;
+                font-size: 15px;
+            }
+            .submenu-container {
+                margin-bottom: 8px;
+                padding-left: 7px;
+            }
+            .sub-menu-btn {
+                padding: 9px 10px;
+                font-size: 13px;
+            }
+            .main-content {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 10px;
+                overflow: visible;
+            }
+            .header, .revenue-header {
+                padding: 12px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .header h2, .revenue-header h2 {
+                margin: 0;
+                font-size: 18px;
+            }
+            .header > div, .revenue-header > * {
+                max-width: 100%;
+            }
+            .order-card {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 14px;
+                margin-top: 12px;
+                border-left-width: 6px;
+                overflow-wrap: anywhere;
+            }
+            .order-info h3 {
+                padding-right: 55px;
+                font-size: 17px;
+                gap: 6px;
+            }
+            .order-info p { font-size: 14px; }
+            .order-products {
+                font-size: 12px;
+                overflow-x: auto;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+            .btn-delete-top {
+                top: 12px;
+                right: 12px;
+                padding: 6px 9px;
+                font-size: 12px;
+            }
+            .btn-container {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 7px;
+            }
+            .btn-container button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .form-group input, .form-group select {
+                font-size: 16px;
+            }
+        }
+
+        #print-receipt { display: none; }
+        @media print {
+            body > *:not(#print-receipt) { display: none !important; }
+            #print-receipt { 
+                display: block !important; 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 72mm; 
+                font-family: 'Courier New', Courier, monospace; 
+                color: #000000 !important; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .r-header { text-align: center; font-weight: 900; font-size: 24px; margin-bottom: 6px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+            .r-line { border-bottom: 2px dashed #000; margin: 8px 0; }
+            .r-text { margin-bottom: 5px; font-weight: 900; font-size: 16px; }
+            .r-total { text-align: right; font-size: 24px; font-weight: 900; margin-top: 15px; border-top: 3px solid #000; padding-top: 8px; }
+            .r-footer { text-align: center; font-size: 16px; font-weight: 900; margin-top: 15px; }
+            @page { margin: 0; } 
+        }
+    </style>
+</head>
+<body>
+<script>
+(function(){
+  try {
+    const s=JSON.parse(sessionStorage.getItem('tanriverdi_admin_session')||'null');
+    const ok=s && (s.role==='admin'||s.rol==='admin'||s.yetki==='admin'||s.isAdmin===true);
+    if(!ok){
+      if(window.parent && window.parent!==window){ window.parent.postMessage({type:'tanriverdi-admin-required'}, '*'); }
+      else { window.location.href='index.html'; }
+    }
+  } catch(e){ window.location.href='index.html'; }
+})();
+</script>
+
+    <div class="sidebar">
+        <div class="brand-banner" title="Tanrıverdi Döner">
+            <div class="brand-mark">
+                <img class="brand-logo-img" src="Logo.png" alt="Tanrıverdi Döner">
+            </div>
+        </div>
+        <button class="menu-btn active" onclick="switchTab('active-tab', this)">🔔 Canlı Siparişler</button>
+        
+        <button class="menu-btn" id="history-main-btn" onclick="gecmisMenuTikla(this)">📂 Geçmiş Siparişler</button>
+        
+        <div class="submenu-container" id="history-submenu">
+            <button class="sub-menu-btn active" onclick="switchTab('history-all-tab', this)">📦 Tümü ve Ciro</button>
+            <button class="sub-menu-btn" onclick="switchTab('history-delivered-tab', this)">✅ Teslim Edilenler</button>
+            <button class="sub-menu-btn" onclick="switchTab('history-rejected-tab', this)">❌ İptal / Reddedilenler</button>
+        </div>
+
+        <button class="menu-btn" onclick="switchTab('users-tab', this)">👤 Kullanıcı Hesapları</button>
+    </div>
+
+    <div class="main-content">
+        <div id="active-tab" class="tab-panel active">
+            <div class="header">
+                <h2>Canlı Sipariş Ekranı</h2>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <button id="shop-toggle-btn" class="btn-shop-toggle open" onclick="restoranDurumunuDegistir()">🟢 Restoran Açık</button>
+                    <span id="active-count" style="font-weight: bold; background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 4px;">Aktif Sipariş: 0</span>
+                    <button id="admin-logout-btn" onclick="yoneticiCikisYap()" style="padding:10px 15px;background:#2c3e50;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;cursor:pointer;font-weight:bold;font-size:14px;">🚪 Çıkış Yap</button>
+                </div>
+            </div>
+            <div id="orders-container">
+                <p style="color: #666; text-align: center; margin-top: 40px;">Yeni siparişler bekleniyor...</p>
+            </div>
+        </div>
+
+        <div id="history-all-tab" class="tab-panel">
+            <div class="revenue-header">
+                <h2>Tüm Geçmiş Siparişler</h2>
+                <span id="total-revenue-badge" style="font-size: 16px; background: #27ae60; padding: 8px 15px; border-radius: 6px; font-weight: bold;">Toplam Ciro: 0 TL</span>
+            </div>
+            <div id="history-all-container">
+                <p style="color: #666; text-align: center; margin-top: 40px;">Henüz geçmiş sipariş bulunmuyor.</p>
+            </div>
+        </div>
+
+        <div id="history-delivered-tab" class="tab-panel">
+            <div class="revenue-header" style="background: #27ae60;">
+                <h2>Teslim Edilen Siparişler</h2>
+                <span id="delivered-revenue-badge" style="font-size: 16px; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 6px; font-weight: bold;">Teslimat Cirosu: 0 TL</span>
+            </div>
+            <div id="history-delivered-container">
+                <p style="color: #666; text-align: center; margin-top: 40px;">Henüz teslim edilen sipariş bulunmuyor.</p>
+            </div>
+        </div>
+
+        <div id="history-rejected-tab" class="tab-panel">
+            <div class="revenue-header" style="background: #c0392b;">
+                <h2>İptal / Reddedilen Siparişler</h2>
+                <span id="rejected-revenue-badge" style="font-size: 16px; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 6px; font-weight: bold;">İptal Tutarı: 0 TL</span>
+            </div>
+            <div id="history-rejected-container">
+                <p style="color: #666; text-align: center; margin-top: 40px;">Henüz reddedilen sipariş bulunmuyor.</p>
+            </div>
+        </div>
+
+        <div id="users-tab" class="tab-panel">
+            <div class="revenue-header" style="background: #2c3e50;">
+                <h2>👤 Kullanıcı Hesapları & Adres Yönetimi</h2>
+                <span style="font-size: 14px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px;">Kayıtlı Kullanıcı İşlemleri</span>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h3 style="margin-top:0; color:#2c3e50;">Yeni Kullanıcı Ekle & Adres Tanımla</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="form-group">
+                        <label>Kullanıcı Adı:</label>
+                        <input type="text" id="k-id" placeholder="Örn: ahmet123">
+                    </div>
+                    <div class="form-group">
+                        <label>Şifre:</label>
+                        <input type="text" id="k-sifre" placeholder="Şifre belirleyin">
+                    </div>
+                    <div class="form-group">
+                        <label>Adı Soyadı:</label>
+                        <input type="text" id="k-ad" placeholder="Ad Soyad">
+                    </div>
+                    <div class="form-group">
+                        <label>Cep Telefonu:</label>
+                        <input type="text" id="k-tel" placeholder="05XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Kayıtlı Adres:</label>
+                        <input type="text" id="k-adres" placeholder="Teslimat adresi">
+                    </div>
+                    <div class="form-group">
+                        <label>Sipariş Şekli:</label>
+                        <select id="k-siparis-sekli">
+                            <option value="Adrese Teslim">Adrese Teslim</option>
+                            <option value="Gel-Al">Gel-Al</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ödeme Yöntemi:</label>
+                        <select id="k-odeme">
+                            <option value="Kapıda Nakit">Kapıda Nakit</option>
+                            <option value="Kapıda Kredi Kartı">Kapıda Kredi Kartı</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="kullaniciEkle()" style="margin-top: 10px; padding: 12px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">💾 Kullanıcıyı ve Adresi Kaydet</button>
+            </div>
+
+            <div id="users-list-container" style="margin-top: 20px;">
+                <p style="color: #666; text-align: center; margin-top: 40px;">Kayıtlı kullanıcılar yükleniyor...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-receipt">
+        <div class="r-header">TANRIVERDİ DÖNER</div>
+        <div style="text-align: center; font-size: 16px; font-weight: 900; margin-bottom: 8px;">Sipariş Fişi</div>
+        <div class="r-text" id="r-date">Tarih: </div>
+        <div class="r-text" id="r-name">Müşteri: </div>
+        <div class="r-text" id="r-phone">Telefon: </div>
+        <div class="r-line"></div>
+        <div class="r-text" style="font-weight:900; font-size: 18px;">Sipariş Detayları:</div>
+        <div class="r-text" id="r-items" style="white-space: pre-line; font-family: monospace; font-size: 16px; line-height: 1.5;"></div>
+        <div class="r-line"></div>
+        <div class="r-text" style="font-weight:900; font-size: 18px;">Teslimat Adresi:</div>
+        <div class="r-text" id="r-address" style="font-size: 16px;"></div>
+        <div class="r-line"></div>
+        <div class="r-total" id="r-total">TOPLAM: 0 TL</div>
+        <div class="r-footer">Afiyet Olsun!</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onChildAdded, onChildChanged, onChildRemoved, onValue, remove, update, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTZSr1gHqeaQXTq1nQ57fY4TXLbAjpmgo",
+            authDomain: "tanriverdidoner-a2641.firebaseapp.com",
+            databaseURL: "https://tanriverdidoner-a2641-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "tanriverdidoner-a2641",
+            storageBucket: "tanriverdidoner-a2641.firebasestorage.app",
+            messagingSenderId: "264603345757",
+            appId: "1:264603345757:web:5317d03dccdf54cb043eb4",
+            measurementId: "G-7N9PBGR0R0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let sesAktif = false;
+        let aktifSiparisSayisi = 0;
+        window.siparislerVeriTabani = {};
+        let uyariDohgusuTimer = null;
+        let audioCtx = null;
+        let mevcutRestoranDurumu = true;
+
+        const ayarlarRef = ref(db, 'ayarlar/restoranAcik');
+        onValue(ayarlarRef, (snapshot) => {
+            const val = snapshot.val();
+            if (val !== null) {
+                mevcutRestoranDurumu = val;
+            } else {
+                set(ayarlarRef, true);
+                mevcutRestoranDurumu = true;
+            }
+            restoranButonunuGuncelleUI();
+        });
+
+        window.restoranDurumunuDegistir = async function() {
+            let yeniDurum = !mevcutRestoranDurumu;
+            try {
+                await set(ref(db, 'ayarlar/restoranAcik'), yeniDurum);
+                mevcutRestoranDurumu = yeniDurum;
+                restoranButonunuGuncelleUI();
+            } catch (error) {
+                console.error("Restoran durumu değiştirilemedi:", error);
+                alert("Durum güncellenirken hata oluştu.");
+            }
+        };
+
+        function restoranButonunuGuncelleUI() {
+            const btn = document.getElementById('shop-toggle-btn');
+            if (!btn) return;
+            if (mevcutRestoranDurumu) {
+                btn.className = "btn-shop-toggle open";
+                btn.innerText = "🟢 Restoran Açık";
+            } else {
+                btn.className = "btn-shop-toggle closed";
+                btn.innerText = "🔴 Restoran Kapalı";
+            }
+        }
+
+        function killBillIslikCal() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                let now = audioCtx.currentTime;
+
+                let osc1 = audioCtx.createOscillator();
+                let gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(1480, now);
+                osc1.frequency.exponentialRampToValueAtTime(1580, now + 0.25);
+                
+                gain1.gain.setValueAtTime(0, now);
+                gain1.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.3);
+
+                let osc2 = audioCtx.createOscillator();
+                let gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1760, now + 0.3);
+                osc2.frequency.exponentialRampToValueAtTime(1900, now + 0.65);
+
+                gain2.gain.setValueAtTime(0, now + 0.3);
+                gain2.gain.linearRampToValueAtTime(0.3, now + 0.35);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now + 0.3);
+                osc2.stop(now + 0.7);
+            } catch (e) {
+                console.log("Ses sentezleme hatası:", e);
+            }
+        }
+
+        // Yeni siparişte müşteri tarafındaki bildirim melodisiyle aynı ilk uyarı
+        // ardından yöneticiye özel "Dikkat Onayınızı bek" kaydı çalınır.
+        const yoneticiOnayAudio = new Audio('Dikkat Onayınızı bek.mp3');
+        yoneticiOnayAudio.preload = 'auto';
+        yoneticiOnayAudio.volume = 1;
+
+        function yoneticiYeniSiparisSesiCal() {
+            if (!sesAktif) return;
+
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+
+                const ctx = audioCtx;
+                const notes = [660, 880];
+                const start = ctx.currentTime;
+                const totalDuration = 3.0;
+                const noteDuration = 0.22;
+                const gap = 0.04;
+                const cycleDuration = notes.length * (noteDuration + gap);
+                const cycles = Math.ceil(totalDuration / cycleDuration);
+
+                for (let cycle = 0; cycle < cycles; cycle++) {
+                    notes.forEach((freq, i) => {
+                        const t = start + cycle * cycleDuration + i * (noteDuration + gap);
+                        if (t >= start + totalDuration) return;
+
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.0001, t);
+                        gain.gain.exponentialRampToValueAtTime(0.18, t + 0.025);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, Math.min(t + noteDuration, start + totalDuration));
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(t);
+                        osc.stop(Math.min(t + noteDuration + 0.02, start + totalDuration));
+                    });
+                }
+
+                window.setTimeout(() => {
+                    try {
+                        yoneticiOnayAudio.currentTime = 0;
+                        const p = yoneticiOnayAudio.play();
+                        if (p && typeof p.catch === 'function') {
+                            p.catch(e => console.log('Yönetici onay sesi çalınamadı:', e));
+                        }
+                    } catch (e) {
+                        console.log('Yönetici onay sesi hatası:', e);
+                    }
+                }, 3050);
+            } catch (e) {
+                console.log('Yeni sipariş ses dizisi hatası:', e);
+            }
+        }
+
+        function yeniSiparisDongusuBaslat() {
+            if (uyariDohgusuTimer) return;
+
+            uyariDohgusuTimer = setInterval(() => {
+                let yeniSiparisVarMi = false;
+                for (let key in window.siparislerVeriTabani) {
+                    if (window.siparislerVeriTabani[key].durum === 'yeni' || !window.siparislerVeriTabani[key].durum) {
+                        yeniSiparisVarMi = true;
+                        break;
+                    }
+                }
+
+                if (yeniSiparisVarMi && sesAktif) {
+                    yoneticiYeniSiparisSesiCal();
+                } else {
+                    clearInterval(uyariDohgusuTimer);
+                    uyariDohgusuTimer = null;
+                }
+            }, 10500);
+        }
+
+        window.yoneticiCikisYap = function() {
+            sessionStorage.removeItem('tanriverdi_admin_session');
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'tanriverdi-logout' }, '*');
+            } else {
+                window.location.href = 'index.html';
+            }
+        };
+
+        window.sesIzniVer = function() {
+            sesAktif = true;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } catch (e) { console.warn('Ses başlatılamadı:', e); }
+            yeniSiparisDongusuBaslat();
+        };
+
+        // Yönetici paneli açıldığı anda ses sistemi otomatik olarak hazırlanır.
+        // Tarayıcı otomatik ses kısıtlaması varsa AudioContext askıda kalabilir;
+        // bu durumda FCM/PWA bildirimi arka plan uyarısı olarak kullanılacaktır.
+        window.addEventListener('load', function() {
+            try {
+                sesAktif = true;
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+                yeniSiparisDongusuBaslat();
+            } catch (e) {
+                console.warn('Otomatik ses hazırlığı başarısız:', e);
+                yeniSiparisDongusuBaslat();
+            }
+        });
+
+        window.switchTab = function(tabId, btn) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.menu-btn, .sub-menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (btn) btn.classList.add('active');
+
+            if (tabId === 'active-tab') {
+                document.getElementById('history-submenu').classList.remove('open');
+                document.getElementById('history-main-btn').classList.remove('active');
+            }
+        };
+
+        window.gecmisMenuTikla = function(btn) {
+            const submenu = document.getElementById('history-submenu');
+            const isOpen = submenu.classList.contains('open');
+
+            if (!isOpen) {
+                submenu.classList.add('open');
+                document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const ilkAltBtn = submenu.querySelector('.sub-menu-btn');
+                switchTab('history-all-tab', ilkAltBtn);
+            } else {
+                submenu.classList.remove('open');
+                btn.classList.remove('active');
+                switchTab('active-tab', document.querySelector('.menu-btn'));
+            }
+        };
+
+        function normalizeAdminDelivery(value) {
+            return value === 'Gel-Al' ? 'Gel-Al' : 'Adrese Teslim';
+        }
+        function normalizeAdminPayment(value) {
+            if (value === 'Kapıda Kredi Kartı' || value === 'Kapıda Kart') return 'Kapıda Kredi Kartı';
+            return 'Kapıda Nakit';
+        }
+
+        // Kullanıcı adı alanları anında BÜYÜK HARFE çevrilir.
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.id === 'k-id') {
+                const start = e.target.selectionStart;
+                const upper = e.target.value.toUpperCase();
+                e.target.value = upper;
+                if (typeof start === 'number') e.target.setSelectionRange(start, start);
+            }
+            if (e.target && e.target.classList && e.target.classList.contains('edit-id')) {
+                e.target.textContent = e.target.textContent.toUpperCase();
+            }
+        });
+
+        window.kullaniciEkle = function() {
+            const id = document.getElementById('k-id').value.trim().toUpperCase();
+            document.getElementById('k-id').value = id;
+            const sifre = document.getElementById('k-sifre').value.trim();
+            const adSoyad = document.getElementById('k-ad').value.trim();
+            const telefon = document.getElementById('k-tel').value.trim();
+            const adres = document.getElementById('k-adres').value.trim();
+            const siparisSekli = normalizeAdminDelivery(document.getElementById('k-siparis-sekli').value);
+            const odeme = normalizeAdminPayment(document.getElementById('k-odeme').value);
+
+            if(!id || !adSoyad || !telefon) {
+                alert("Lütfen Kullanıcı ID, Ad Soyad ve Telefon alanlarını doldurun!");
+                return;
+            }
+
+            const yeniKullaniciRef = ref(db, 'kullanicilar/' + id);
+            set(yeniKullaniciRef, {
+                id: id,
+                pass: sifre,
+                sifre: sifre,
+                adSoyad: adSoyad,
+                telefon: telefon,
+                adres: adres,
+                siparisSekli: siparisSekli,
+                odemeYontemi: odeme,
+                payment: odeme,
+                delivery: siparisSekli,
+                kayitTarihi: new Date().toLocaleString('tr-TR')
+            }).then(() => {
+                alert("Kullanıcı başarıyla kaydedildi.");
+                document.getElementById('k-id').value = '';
+                document.getElementById('k-sifre').value = '';
+                document.getElementById('k-ad').value = '';
+                document.getElementById('k-tel').value = '';
+                document.getElementById('k-adres').value = '';
+            }).catch(err => {
+                alert("Hata oluştu: " + err.message);
+            });
+        };
+
+        window.kullaniciSil = function(id) {
+            if(confirm(`"${id}" ID'li kullanıcıyı silmek istediğinize emin misiniz?`)) {
+                remove(ref(db, 'kullanicilar/' + id)).then(() => {
+                    alert("Kullanıcı silindi.");
+                });
+            }
+        };
+
+        window.tekilSiparisSil = async function(siparisKey) {
+            if(!confirm("Bu geçmiş siparişi kalıcı olarak silmek istiyor musunuz?")) return;
+
+            try {
+                // Önce ana sipariş kaydını sil.
+                await remove(ref(db, 'siparisler/' + siparisKey));
+
+                // Aynı sipariş kullanıcının kendi siparislerim geçmişinde de tutuluyor.
+                // Ana sipariş silinse bile kullanıcı geçmişinde kalmaması için tüm
+                // kullanıcıların siparislerim listesinde bu sipariş ID'sini temizle.
+                const kullanicilarSnapshot = await get(ref(db, 'kullanicilar'));
+                const guncellemeler = {};
+
+                if(kullanicilarSnapshot.exists()) {
+                    kullanicilarSnapshot.forEach((kullaniciSnapshot) => {
+                        const kullaniciKey = kullaniciSnapshot.key;
+                        const kullanici = kullaniciSnapshot.val() || {};
+                        const gecmis = kullanici.siparislerim;
+
+                        if(Array.isArray(gecmis)) {
+                            const yeniGecmis = gecmis.filter(sip => String(sip?.id || '') !== String(siparisKey));
+                            if(yeniGecmis.length !== gecmis.length) {
+                                guncellemeler['kullanicilar/' + kullaniciKey + '/siparislerim'] = yeniGecmis.length ? yeniGecmis : null;
+                            }
+                        } else if(gecmis && typeof gecmis === 'object') {
+                            const yeniGecmis = {};
+                            let degisti = false;
+                            Object.entries(gecmis).forEach(([key, sip]) => {
+                                if(String(key) === String(siparisKey) || String(sip?.id || '') === String(siparisKey)) {
+                                    degisti = true;
+                                } else {
+                                    yeniGecmis[key] = sip;
+                                }
+                            });
+                            if(degisti) {
+                                guncellemeler['kullanicilar/' + kullaniciKey + '/siparislerim'] = Object.keys(yeniGecmis).length ? yeniGecmis : null;
+                            }
+                        }
+                    });
+                }
+
+                if(Object.keys(guncellemeler).length) {
+                    await update(ref(db), guncellemeler);
+                }
+
+                // Yönetim panelini hemen güncelle.
+                kullaniciEkraniniYenile();
+            } catch(err) {
+                alert("Silme hatası: " + err.message);
+            }
+        };
+
+        window.kullaniciKartKaydet = async function(eskiId) {
+            const card = document.getElementById(`user-card-${eskiId}`);
+            if(!card) return;
+
+            const idElement = card.querySelector('.edit-id');
+            const yeniId = idElement.innerText.trim().toUpperCase();
+            idElement.innerText = yeniId;
+            const yeniSifre = card.querySelector('.edit-sifre').innerText.trim();
+            const yeniAd = card.querySelector('.edit-ad').innerText.trim();
+            const yeniTel = card.querySelector('.edit-tel').innerText.trim();
+            const yeniAdres = card.querySelector('.edit-adres').innerText.trim();
+            const yeniSiparisSekli = normalizeAdminDelivery(card.querySelector('.edit-sipsekli').value);
+            const yeniOdeme = normalizeAdminPayment(card.querySelector('.edit-odeme').value);
+
+            if(!yeniId || !yeniAd) {
+                alert("Kullanıcı ID ve Ad Soyad alanları boş bırakılamaz!");
+                return;
+            }
+
+            if(!yeniSifre) {
+                alert("Şifre boş bırakılamaz!");
+                return;
+            }
+
+            // Kullanıcı adı değiştiriliyorsa yeni ID'nin başka bir kullanıcıya ait
+            // olup olmadığını kontrol et. Böylece mevcut hesap yanlışlıkla ezilmez.
+            try {
+                const yeniRef = ref(db, 'kullanicilar/' + yeniId);
+                const yeniSnapshot = await get(yeniRef);
+
+                if(yeniId !== eskiId && yeniSnapshot.exists()) {
+                    alert(`"${yeniId}" kullanıcı adı zaten kullanılıyor. Lütfen farklı bir kullanıcı adı seçin.`);
+                    return;
+                }
+
+                const guncellemeZamani = Date.now();
+
+                // Mevcut hesabın tamamını önce alıyoruz. Böylece kullanıcı adı değişirken
+                // adreslerim, siparislerim ve gelecekte eklenebilecek diğer alanlar kaybolmaz.
+                const eskiRef = ref(db, 'kullanicilar/' + eskiId);
+                const eskiSnapshot = await get(eskiRef);
+                const mevcutVeri = eskiSnapshot.exists() ? (eskiSnapshot.val() || {}) : {};
+
+                // Eski kullanıcı bilgilerini sakla. Kullanıcının adı veya telefonu
+                // değişirse geçmiş siparişlerin kullanıcıyla bağlantısı kopmasın.
+                const eskiAdSoyad = mevcutVeri.adSoyad || mevcutVeri.name || '';
+                const eskiTelefon = (mevcutVeri.telefon || mevcutVeri.phone || '').replace(/\D/g, '').slice(-10);
+                const yeniTelefon = yeniTel;
+                const yeniTelefonNormalize = (yeniTel || '').replace(/\D/g, '').slice(-10);
+
+                const guncelVeri = {
+                    ...mevcutVeri,
+                    id: yeniId,
+                    // İki alanı da aynı yeni şifreye getiriyoruz. Sipariş Paneli girişte
+                    // önce "pass" alanını kontrol ettiği için eski şifrenin kalması engellenir.
+                    pass: yeniSifre,
+                    sifre: yeniSifre,
+                    adSoyad: yeniAd,
+                    telefon: yeniTel,
+                    phone: yeniTel,
+                    adres: yeniAdres,
+                    address: yeniAdres,
+                    siparisSekli: yeniSiparisSekli,
+                    delivery: yeniSiparisSekli,
+                    odemeYontemi: yeniOdeme,
+                    payment: yeniOdeme,
+                    hesapSurumu: guncellemeZamani,
+                    guncellemeZamani: guncellemeZamani
+                };
+
+                // Kullanıcının kartındaki bilgiler değiştiğinde, bu kullanıcıya ait
+                // geçmiş sipariş kayıtlarını da yeni bilgilerle güncelle. Böylece
+                // telefon/adres/ad soyad değişince geçmiş siparişler kaybolmaz.
+                const siparislerRef = ref(db, 'siparisler');
+                const siparislerSnapshot = await get(siparislerRef);
+                if (siparislerSnapshot.exists()) {
+                    const siparisGuncellemeleri = {};
+                    siparislerSnapshot.forEach((siparisSnapshot) => {
+                        const sip = siparisSnapshot.val() || {};
+                        const sipTelefon = (sip.telefon || sip.phone || '').replace(/\D/g, '').slice(-10);
+                        const sipIsim = (sip.isim || '').trim().toLowerCase();
+                        const adEslesiyor = eskiAdSoyad && sipIsim === eskiAdSoyad.trim().toLowerCase();
+                        const telefonEslesiyor = eskiTelefon && sipTelefon === eskiTelefon;
+
+                        if (adEslesiyor || telefonEslesiyor) {
+                            siparisGuncellemeleri[siparisSnapshot.key + '/isim'] = yeniAd;
+                            siparisGuncellemeleri[siparisSnapshot.key + '/telefon'] = yeniTel;
+                            siparisGuncellemeleri[siparisSnapshot.key + '/phone'] = yeniTel;
+                            siparisGuncellemeleri[siparisSnapshot.key + '/adres'] = yeniAdres || 'Gel-Al (Adres Yok)';
+                            siparisGuncellemeleri[siparisSnapshot.key + '/address'] = yeniAdres || 'Gel-Al (Adres Yok)';
+                            siparisGuncellemeleri[siparisSnapshot.key + '/teslimatSekli'] = yeniSiparisSekli;
+                            siparisGuncellemeleri[siparisSnapshot.key + '/odemeTipi'] = yeniOdeme;
+                        }
+                    });
+
+                    if (Object.keys(siparisGuncellemeleri).length) {
+                        await update(siparislerRef, siparisGuncellemeleri);
+                    }
+                }
+
+                // Kullanıcının kendi siparislerim geçmişindeki kayıtları da güncelle.
+                if (Array.isArray(mevcutVeri.siparislerim)) {
+                    const guncelSiparislerim = mevcutVeri.siparislerim.map((sip) => ({
+                        ...sip,
+                        isim: yeniAd,
+                        telefon: yeniTel,
+                        adres: yeniAdres || sip.adres || 'Gel-Al (Adres Yok)',
+                        teslimatSekli: yeniSiparisSekli,
+                        odemeTipi: yeniOdeme
+                    }));
+                    guncelVeri.siparislerim = guncelSiparislerim;
+                }
+
+                // Kayıtlı adreslerdeki iletişim bilgilerini de yeni kart bilgileriyle senkronize et.
+                if (Array.isArray(mevcutVeri.adreslerim)) {
+                    guncelVeri.adreslerim = mevcutVeri.adreslerim.map((addr, index) => ({
+                        ...addr,
+                        name: index === 0 || !addr.name ? yeniAd : addr.name,
+                        phone: index === 0 || !addr.phone ? yeniTel : addr.phone,
+                        text: index === 0 || !addr.text ? (yeniAdres || addr.text || '') : addr.text,
+                        delivery: index === 0 || !addr.delivery ? yeniSiparisSekli : (addr.delivery === 'Paket Servis' ? 'Adrese Teslim' : addr.delivery),
+                        payment: index === 0 || !addr.payment ? yeniOdeme : (addr.payment === 'Kapıda Kart' ? 'Kapıda Kredi Kartı' : addr.payment)
+                    }));
+                }
+
+                // Kullanıcı kartındaki telefon/adres bilgileri için eski kayıtlı ilk adresi
+                // doğrudan güncel teslimat bilgileriyle eşitle.
+                if (Array.isArray(guncelVeri.adreslerim) && guncelVeri.adreslerim.length > 0) {
+                    guncelVeri.adreslerim[0] = {
+                        ...guncelVeri.adreslerim[0],
+                        name: yeniAd,
+                        phone: yeniTel,
+                        text: yeniAdres || guncelVeri.adreslerim[0].text || '',
+                        delivery: yeniSiparisSekli,
+                        payment: yeniOdeme,
+                        isDefault: true
+                    };
+                }
+
+                if (yeniId !== eskiId) {
+                    // Hesabın bütün mevcut verilerini taşı, sonra eski yolu sil.
+                    await set(yeniRef, guncelVeri);
+                    await remove(eskiRef);
+
+                    // Bu tarayıcıda eski kullanıcıyla açık bir müşteri oturumu varsa
+                    // kullanıcı adı değişikliği sonrasında oturumu da kesin olarak kapat.
+                    // Böylece eski kullanıcı adıyla açık kalan yerel oturum tekrar kullanılamaz.
+                    try {
+                        const savedSession = localStorage.getItem('tanriverdi_logged_user');
+                        if (savedSession) {
+                            const sessionData = JSON.parse(savedSession);
+                            if (sessionData && sessionData.username === eskiId) {
+                                localStorage.removeItem('tanriverdi_logged_user');
+                                localStorage.removeItem('tanriverdi_adreslerim');
+                                localStorage.removeItem('tanriverdi_siparislerim');
+                                localStorage.removeItem('last_order_id');
+                            }
+                        }
+                    } catch (sessionErr) {
+                        localStorage.removeItem('tanriverdi_logged_user');
+                        localStorage.removeItem('tanriverdi_adreslerim');
+                        localStorage.removeItem('tanriverdi_siparislerim');
+                        localStorage.removeItem('last_order_id');
+                    }
+
+                    alert("Kullanıcı adı değiştirildi. Eski kullanıcı adı artık geçersiz ve eski oturum kapatıldı. Yeni kullanıcı adıyla tekrar giriş yapılması gerekiyor.");
+                } else {
+                    // Aynı kullanıcı adında şifre/adres/telefon vb. değişikliklerini
+                    // doğrudan mevcut Firebase kaydına uygula.
+                    await update(ref(db, 'kullanicilar/' + eskiId), guncelVeri);
+                    alert("Kullanıcı bilgileri güncellendi. Eski şifre artık geçersiz.");
+                }
+
+                // Yönetim panelindeki listeyi güncel Firebase verisiyle tekrar oluştur.
+                kullaniciEkraniniYenile();
+            } catch (err) {
+                console.error("Kullanıcı güncelleme hatası:", err);
+                alert("Güncelleme hatası: " + err.message);
+            }
+        };
+
+        function kullaniciEkraniniYenile() {
+            const container = document.getElementById('users-list-container');
+            if (!container) return;
+
+            const kullanicilarRef = ref(db, 'kullanicilar');
+            onValue(kullanicilarRef, (snapshot) => {
+                if (!snapshot.exists()) {
+                    container.innerHTML = '<p style="color: #666; text-align: center; margin-top: 40px;">Henüz kayıtlı kullanıcı bulunmuyor.</p>';
+                    return;
+                }
+
+                container.innerHTML = '<h3 style="color:#2c3e50; margin-top:20px;">Kayıtlı Kullanıcı Listesi</h3>';
+                
+                snapshot.forEach((childSnapshot) => {
+                    const uKey = childSnapshot.key;
+                    const u = childSnapshot.val() || {};
+
+                    const adSoyad = u.adSoyad || u.ad_soyad || u.name || u.musteriAdi || u.kullaniciAdi || uKey;
+                    const telefon = u.telefon || u.tel || u.phone || '';
+                    const adres = u.adres || u.address || '';
+                    
+                    // Şifrenin veritabanındaki alternatif tüm yazılış biçimleri taranıyor
+                    const sifre = u.sifre || u.password || u.sifresi || u.sifreBilgisi || u.pass || '';
+                    
+                    const idVal = u.id || uKey;
+                    const siparisSekli = (u.siparisSekli === 'Gel-Al' || u.delivery === 'Gel-Al') ? 'Gel-Al' : 'Adrese Teslim';
+                    const odemeYontemi = (u.odemeYontemi === 'Kapıda Kart' || u.payment === 'Kapıda Kart') ? 'Kapıda Kredi Kartı' : (u.odemeYontemi || u.odeme_yontemi || u.odeme || u.payment || 'Kapıda Nakit');
+
+                    let kullaniciGecmisiHTML = '';
+                    let siparisSayisi = 0;
+
+                    for(let sKey in window.siparislerVeriTabani) {
+                        let sip = window.siparislerVeriTabani[sKey];
+                        let sipTel = (sip.telefon || '').replace(/\s+/g, '');
+                        let userTel = telefon.replace(/\s+/g, '');
+
+                        if((userTel && sipTel && sipTel.includes(userTel)) || (sip.isim && sip.isim.toLowerCase().trim() === adSoyad.toLowerCase().trim())) {
+                            siparisSayisi++;
+                            let durumKisa = sip.durum === 'delivered' ? '✅ Teslim' : sip.durum === 'rejected' ? '❌ İptal' : '⏳ İşlemde';
+                            kullaniciGecmisiHTML += `
+                                <div class="history-item-row">
+                                    <div style="font-size: 13px;">
+                                        <b>${sip.tarih || 'Tarihsiz'}:</b> ${sip.detaylar || 'Ürün yok'} - <b>${sip.tutar || 0} TL</b> (${durumKisa})
+                                    </div>
+                                    <button class="btn-mini-delete" onclick="tekilSiparisSil('${sKey}')">🗑️ Sil</button>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    if(siparisSayisi === 0) {
+                        kullaniciGecmisiHTML = '<p style="color:#888; font-size:13px; margin:5px 0;">Geçmiş siparişi bulunmuyor.</p>';
+                    }
+
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="order-card" id="user-card-${uKey}" style="border-left-color: #2c3e50;">
+                            <button class="btn-delete-top" onclick="kullaniciSil('${uKey}')">🗑️ Kullanıcıyı Sil</button>
+                            <div class="order-info">
+                                <h3><span class="user-card-name">👤 <span contenteditable="true" class="editable-field edit-ad" title="Düzenlemek için tıklayın">${adSoyad}</span></span></h3>
+                                
+                                <p><strong>Kullanıcı ID:</strong> <span contenteditable="true" class="editable-field edit-id" title="Düzenlemek için tıklayın">${idVal}</span></p>
+                                <p><strong>Şifre:</strong> <span contenteditable="true" class="editable-field edit-sifre" title="Düzenlemek için tıklayın">${sifre}</span></p>
+                                <p><strong>Cep Telefonu:</strong> <span contenteditable="true" class="editable-field edit-tel" title="Düzenlemek için tıklayın">${telefon}</span></p>
+                                <p><strong>Kayıtlı Adres:</strong> <span contenteditable="true" class="editable-field edit-adres" style="width: 80%;" title="Düzenlemek için tıklayın">${adres}</span></p>
+                                
+                                <p style="margin-top: 10px;"><strong>Sipariş Şekli:</strong> 
+                                    <select class="editable-field edit-sipsekli" style="padding: 4px;">
+                                        <option value="Adrese Teslim" ${siparisSekli === 'Adrese Teslim' ? 'selected' : ''}>Adrese Teslim</option>
+                                        <option value="Gel-Al" ${siparisSekli === 'Gel-Al' ? 'selected' : ''}>Gel-Al</option>
+                                    </select>
+                                </p>
+                                
+                                <p><strong>Ödeme Yöntemi:</strong> 
+                                    <select class="editable-field edit-odeme" style="padding: 4px;">
+                                        <option value="Kapıda Nakit" ${odemeYontemi === 'Kapıda Nakit' ? 'selected' : ''}>Kapıda Nakit</option>
+                                        <option value="Kapıda Kredi Kartı" ${odemeYontemi === 'Kapıda Kredi Kartı' ? 'selected' : ''}>Kapıda Kredi Kartı</option>
+                                    </select>
+                                </p>
+                                
+                                <div class="order-products" style="margin-top:10px;">
+                                    <strong>Geçmiş Siparişleri (${siparisSayisi}):</strong>
+                                    <div style="margin-top: 8px; max-height: 180px; overflow-y: auto;">
+                                        ${kullaniciGecmisiHTML}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="btn-container">
+                                <button class="btn-accept" onclick="kullaniciKartKaydet('${uKey}')" style="width: 100%; padding: 12px; font-size: 15px; text-align: center;">💾 Bilgileri Güncelle</button>
+                            </div>
+                        </div>
+                    `);
+                });
+            });
+        }
+
+        window.durumGuncelle = function(siparisKey, yeniDurum) {
+            const tekSiparisRef = ref(db, 'siparisler/' + siparisKey);
+            update(tekSiparisRef, { durum: yeniDurum }).then(() => {
+                try {
+                    if (window.parent && window.parent !== window && typeof window.parent.tanriverdiNotifyOrderStatus === 'function') {
+                        window.parent.tanriverdiNotifyOrderStatus(siparisKey, yeniDurum).catch(e => console.warn('Müşteri FCM bildirimi:', e));
+                    }
+                } catch(e) {}
+            }).catch(err => alert("Durum güncellenirken hata oluştu."));
+        };
+
+        window.siparisSil = function(siparisKey) {
+            if(confirm("Bu siparişi silmek istediğinize emin misiniz?")) {
+                remove(ref(db, 'siparisler/' + siparisKey));
+            }
+        };
+
+        window.fisYazdir = function(siparisKey) {
+            const siparis = window.siparislerVeriTabani[siparisKey];
+            if(!siparis) return;
+
+            document.getElementById('r-date').innerText = "Tarih: " + (siparis.tarih || new Date().toLocaleString('tr-TR'));
+            document.getElementById('r-name').innerText = "Müşteri: " + (siparis.isim || '-');
+            document.getElementById('r-phone').innerText = "Telefon: " + (siparis.telefon || '-');
+            document.getElementById('r-items').innerText = siparis.detaylar || '-';
+            document.getElementById('r-address').innerText = siparis.adres || '-';
+            document.getElementById('r-total').innerText = "TOPLAM: " + siparis.tutar + " TL";
+
+            window.print();
+        };
+
+        const siparisRef = ref(db, 'siparisler');
+
+        onChildAdded(siparisRef, (snapshot) => {
+            const siparis = snapshot.val();
+            const siparisKey = snapshot.key;
+            window.siparislerVeriTabani[siparisKey] = siparis;
+            siparisiEkranaEkle(siparisKey, siparis);
+            hesaplaVeGuncelleCirolar();
+            kullaniciEkraniniYenile();
+        });
+
+        onChildChanged(siparisRef, (snapshot) => {
+            const siparis = snapshot.val();
+            const siparisKey = snapshot.key;
+            window.siparislerVeriTabani[siparisKey] = siparis;
+            
+            const eskiKart = document.getElementById(`kart-${siparisKey}`);
+            const eskiParent = eskiKart ? eskiKart.parentNode : null;
+            const eskiNextSibling = eskiKart ? eskiKart.nextSibling : null;
+            if (eskiKart) {
+                // Durum değişirken kartı listeden çıkarıp yeniden sona ekleme.
+                // Böylece Yola Çıktı / Teslim Edildi tıklanınca diğer canlı siparişlerin
+                // sırası kesinlikle değişmez.
+                eskiKart.remove();
+            }
+
+            ['all', 'delivered', 'rejected'].forEach(type => {
+                const eskiGecmisKart = document.getElementById(`gecmis-${type}-kart-${siparisKey}`);
+                if (eskiGecmisKart) eskiGecmisKart.remove();
+            });
+
+            siparisiEkranaEkle(siparisKey, siparis);
+
+            // Güncellenen kart hâlâ aktif listede kalıyorsa eski konumuna geri koy.
+            // Böylece durum değişikliği sıralamayı bozmaz.
+            if (eskiParent && eskiParent.id === 'orders-container' && (siparis.durum === 'accepted' || siparis.durum === 'onway' || siparis.durum === 'yeni')) {
+                const yeniKart = document.getElementById(`kart-${siparisKey}`);
+                if (yeniKart) {
+                    if (eskiNextSibling && eskiNextSibling.parentNode === eskiParent) {
+                        eskiParent.insertBefore(yeniKart, eskiNextSibling);
+                    } else {
+                        eskiParent.appendChild(yeniKart);
+                    }
+                }
+            }
+            hesaplaVeGuncelleCirolar();
+            kullaniciEkraniniYenile();
+        });
+
+        onChildRemoved(siparisRef, (snapshot) => {
+            const siparisKey = snapshot.key;
+            delete window.siparislerVeriTabani[siparisKey];
+
+            const kart = document.getElementById(`kart-${siparisKey}`);
+            if (kart) {
+                kart.remove();
+                aktifSiparisSayisi = Math.max(0, aktifSiparisSayisi - 1);
+                guncelleSayac();
+            }
+            
+            ['all', 'delivered', 'rejected'].forEach(type => {
+                const gKart = document.getElementById(`gecmis-${type}-kart-${siparisKey}`);
+                if (gKart) gKart.remove();
+            });
+
+            boslukKontrol();
+            hesaplaVeGuncelleCirolar();
+            kullaniciEkraniniYenile();
+        });
+
+        function guncelleSayac() {
+            const sayacEl = document.getElementById('active-count');
+            if (sayacEl) sayacEl.innerText = `Aktif Sipariş: ${aktifSiparisSayisi}`;
+        }
+
+        function boslukKontrol() {
+            const container = document.getElementById('orders-container');
+            if (container && container.children.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; margin-top: 40px;">Yeni siparişler bekleniyor...</p>';
+            }
+        }
+
+        function hesaplaVeGuncelleCirolar() {
+            let totalRevenue = 0;
+            let deliveredRevenue = 0;
+            let rejectedAmount = 0;
+
+            let allContainer = document.getElementById('history-all-container');
+            let deliveredContainer = document.getElementById('history-delivered-container');
+            let rejectedContainer = document.getElementById('history-rejected-container');
+
+            // Geçmiş siparişleri her yenilemede yeniden oluşturup en yeni siparişi üste al.
+            // Firebase push anahtarları oluşturulma zamanına göre sıralı olduğundan
+            // anahtarı tersten sıralamak sipariş geliş sırasını korur.
+            if (allContainer) allContainer.innerHTML = "";
+            if (deliveredContainer) deliveredContainer.innerHTML = "";
+            if (rejectedContainer) rejectedContainer.innerHTML = "";
+
+            const siraliSiparisler = Object.entries(window.siparislerVeriTabani).sort((a, b) => {
+                const aKey = String(a[0]);
+                const bKey = String(b[0]);
+                return bKey.localeCompare(aKey);
+            });
+
+            for (const [key, s] of siraliSiparisler) {
+                const tutar = parseFloat(s.tutar) || 0;
+                const durum = s.durum || 'yeni';
+
+                if (durum === 'delivered') {
+                    deliveredRevenue += tutar;
+                    totalRevenue += tutar;
+                    gecmisKartiEkle('delivered', key, s);
+                    gecmisKartiEkle('all', key, s);
+                } else if (durum === 'rejected') {
+                    rejectedAmount += tutar;
+                    gecmisKartiEkle('rejected', key, s);
+                    gecmisKartiEkle('all', key, s);
+                } else {
+                    totalRevenue += tutar;
+                    gecmisKartiEkle('all', key, s);
+                }
+            }
+
+            document.getElementById('total-revenue-badge').innerText = `Toplam Ciro: ${totalRevenue} TL`;
+            document.getElementById('delivered-revenue-badge').innerText = `Teslimat Cirosu: ${deliveredRevenue} TL`;
+            document.getElementById('rejected-revenue-badge').innerText = `İptal Tutarı: ${rejectedAmount} TL`;
+        }
+
+        function gecmisKartiEkle(type, key, siparis) {
+            const containerId = type === 'all' ? 'history-all-container' : type === 'delivered' ? 'history-delivered-container' : 'history-rejected-container';
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const kartId = `gecmis-${type}-kart-${key}`;
+            if (document.getElementById(kartId)) return;
+
+            if (container.innerHTML.includes("Henüz")) {
+                container.innerHTML = "";
+            }
+
+            let durumMetni = siparis.durum === 'accepted' ? '👍 Kabul Edildi' : 
+                             siparis.durum === 'onway' ? '🛵 Yola Çıktı' : 
+                             siparis.durum === 'delivered' ? '✅ Teslim Edildi' : 
+                             siparis.durum === 'rejected' ? '❌ Reddedildi / İptal' : '⏳ Bekliyor';
+
+            container.insertAdjacentHTML('beforeend', `
+                <div class="order-card" id="${kartId}" style="border-left-color: ${type==='delivered'?'#27ae60':type==='rejected'?'#c0392b':'#2980b9'}">
+                    <button class="btn-delete-top" onclick="siparisSil('${key}')">🗑️ Sil</button>
+                    <div class="order-info">
+                        <h3>Sipariş - ${siparis.isim} <span style="font-size: 14px; color: #666;">🕒 ${siparis.tarih || ''}</span></h3>
+                        <p><strong>Telefon:</strong> ${siparis.telefon}</p>
+                        <p><strong>Adres:</strong> ${siparis.adres}</p>
+                        <div class="order-products"><strong>Ürünler:</strong>\n${siparis.detaylar || '-'}</div>
+                        <p><strong>Durum:</strong> ${durumMetni}</p>
+                        <p style="font-weight: bold; color: #2c3e50;">Tutar: ${siparis.tutar} TL</p>
+                    </div>
+                </div>
+            `);
+        }
+
+        function siparisiEkranaEkle(siparisKey, siparis) {
+            const durum = siparis.durum || 'yeni';
+            let hamSaat = siparis.tarih || new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            if (hamSaat.split(':').length > 2) {
+                let parcalar = hamSaat.split(':');
+                hamSaat = parcalar[0] + ':' + parcalar[1];
+            }
+            const siparisSaati = hamSaat;
+            
+            if (durum === 'yeni') {
+                if (!document.getElementById(`kart-${siparisKey}`)) {
+                    aktifSiparisSayisi++;
+                    guncelleSayac();
+                }
+
+                if (sesAktif) {
+                    yoneticiYeniSiparisSesiCal();
+                    yeniSiparisDongusuBaslat();
+                }
+
+                const container = document.getElementById('orders-container');
+                if(container.innerHTML.includes("bekleniyor")) {
+                    container.innerHTML = "";
+                }
+
+                container.insertAdjacentHTML('afterbegin', `
+                    <div class="order-card" id="kart-${siparisKey}">
+                        <button class="btn-delete-top" onclick="siparisSil('${siparisKey}')">🗑️ Sil</button>
+                        <div class="order-info">
+                            <h3>🚨 YENİ SİPARİŞ! <span style="font-size: 16px; color: #2c3e50; font-weight: bold;">🕒 ${siparisSaati}</span></h3>
+                            <p><strong>Müşteri:</strong> <span class="s-isim">${siparis.isim}</span></p>
+                            <p><strong>Telefon:</strong> <span class="s-tel">${siparis.telefon}</span></p>
+                            <p><strong>Ödeme Tipi:</strong> ${siparis.odemeTipi || 'Belirtilmemiş'}</p>
+                            <p><strong>Adres:</strong> <span class="s-adr">${siparis.adres}</span></p>
+                            <div class="order-products"><strong>Sipariş Edilen Ürünler ve Detaylar:</strong>\n${siparis.detaylar || '-'}</div>
+                            <p style="font-size: 17px; color: #c0392b;"><strong>Genel Toplam Tutar:</strong> <span class="s-tut">${siparis.tutar}</span> TL</p>
+                        </div>
+                        <div class="btn-container">
+                            <button class="btn-accept" onclick="durumGuncelle('${siparisKey}', 'accepted')">✅ Siparişi Kabul Et & Bildirim Gönder</button>
+                            <button class="btn-reject" onclick="durumGuncelle('${siparisKey}', 'rejected')">❌ Reddet & Bildirim Gönder</button>
+                            <button class="btn-print" onclick="fisYazdir('${siparisKey}')">🖨️ Fiş Yazdır</button>
+                        </div>
+                    </div>
+                `);
+            } else if (durum === 'accepted' || durum === 'onway') {
+                const container = document.getElementById('orders-container');
+                if(container.innerHTML.includes("bekleniyor")) {
+                    container.innerHTML = "";
+                }
+                if(!document.getElementById(`kart-${siparisKey}`)) {
+                    aktifSiparisSayisi++;
+                    guncelleSayac();
+                }
+
+                let isAccepted = durum === 'accepted';
+                container.insertAdjacentHTML('afterbegin', `
+                    <div class="order-card ${isAccepted ? 'accepted' : 'onway'}" id="kart-${siparisKey}">
+                        <button class="btn-delete-top" onclick="siparisSil('${siparisKey}')">🗑️ Sil</button>
+                        <div class="order-info">
+                            <h3>${isAccepted ? '👍 KABUL EDİLDİ (HAZIRLANIYOR)' : '🛵 YOLA ÇIKTI'} <span style="font-size: 16px; color: #2c3e50; font-weight: bold;">🕒 ${siparisSaati}</span></h3>
+                            <p><strong>Müşteri:</strong> ${siparis.isim} (${siparis.telefon})</p>
+                            <p><strong>Adres:</strong> ${siparis.adres}</p>
+                            <div class="order-products"><strong>Ürünler:</strong>\n${siparis.detaylar || '-'}</div>
+                            <p><strong>Tutar:</strong> ${siparis.tutar} TL</p>
+                        </div>
+                        <div class="btn-container">
+                            <button class="btn-print" onclick="fisYazdir('${siparisKey}')">🖨️ Fiş Yazdır</button>
+                            ${isAccepted
+                                ? `<button class="btn-onway" onclick="durumGuncelle('${siparisKey}', 'onway')">🛵 Yola Çıktı</button>`
+                                : `<button class="btn-delivered" onclick="durumGuncelle('${siparisKey}', 'delivered')">✅ Teslim Edildi</button>`
+                            }
+                        </div>
+                    </div>
+                `);
+            }
+        }
+    </script>
+</body>
+</html>

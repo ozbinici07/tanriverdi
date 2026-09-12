@@ -1,0 +1,32 @@
+FCM/PWA – Firebase Spark uyumlu müşteri bildirimli final paket
+
+HEDEF: Android + iOS + Windows PWA üzerinde müşteriye sipariş durumu ve yöneticiye yeni sipariş bildirimi.
+
+VAPID PUBLIC KEY:
+BAO2Ilxa-3xGmFMZtyVR6IACrsicbOXccky85oWWXofrxBBR0tSu0DUyyB-HPikszmvOneiu8ZOkKMHoVdOYgl0
+
+Mimari:
+Yeni sipariş: Müşteri PWA -> Realtime Database -> Worker /notify -> FCM -> Yönetici PWA
+Durum bildirimi: Yönetici -> Realtime Database -> Worker /notify -> FCM -> Müşteri PWA
+
+Firebase Functions KULLANILMIYOR. Firebase projesi Spark'ta kalır.
+FCM arka plan kodu mevcut PWA sw.js içine birleştirildi; ayrı firebase-messaging-sw.js kullanılmıyor.
+
+Dosyalar:
+- index.html: tek birleşik PWA; FCM modülünü ana sayfadan yükler ve yeni siparişte Worker'a çağrı yapar.
+- sw.js: PWA cache + FCM onBackgroundMessage.
+- push.js: yönetici ve müşteri cihazlarında Notification izni, FCM token ve Realtime Database token kaydı.
+- push-sender-worker.js: Firebase Admin HTTP v1 ile FCM göndericisi.
+- manifest.webmanifest / ikonlar.
+
+ÖNEMLİ: Müşteri izin isteği sipariş butonunun kullanıcı etkileşimi sırasında ana PWA üzerinden alınır; müşteri cihaz kimliği sipariş kaydıyla eşleştirilir.
+
+Worker için Cloudflare Secret değişkenleri:
+FCM_SERVICE_ACCOUNT_EMAIL = Firebase servis hesabı e-postası
+FCM_SERVICE_ACCOUNT_PRIVATE_KEY = Firebase JSON içindeki private_key değeri
+
+Worker URL'si paket içinde hazır: https://tanriverdi-fcm.ozbinici07.workers.dev/notify
+
+iOS: Web Push için PWA'nın Ana Ekran'a eklenmesi ve iOS'un Web Push destekleyen sürümünde bildirim izninin kullanıcı etkileşimiyle verilmesi gerekir. Paket, yönetici sekmelerine Bildirimleri Aç düğmesi ekler.
+
+GÜVENLİK: Firebase private key HTML/GitHub'a konulmamalıdır. Kullanılan private key sohbet içinde paylaşıldığı için kurulum tamamlandıktan sonra bu anahtarın Firebase'den iptal edilip yeni anahtar oluşturulması önerilir.

@@ -1,0 +1,29 @@
+{
+  "id": "./",
+  "name": "Tanrıverdi Döner",
+  "short_name": "Tanrıverdi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
+  "background_color": "#f6f6f6",
+  "theme_color": "#e21d25",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
