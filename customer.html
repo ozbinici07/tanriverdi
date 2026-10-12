@@ -1755,7 +1755,7 @@ async function checkUserPasswordModal(){
  // Yönetici hesabı müşteri hesabı olarak oluşturulmaz; doğrudan yönetim paneline yönlendirilir.
  if(username === "ADMIN" && pass === "2385") {
    const adminSession = { username:"admin", name:"Yönetici", phone:"", delivery:"Adrese Teslim", address:"", payment:"Kapıda Nakit", role:"admin", hesapSurumu:"admin" };
-   sessionStorage.setItem("tanriverdi_admin_session", JSON.stringify(adminSession));
+   localStorage.setItem("tanriverdi_admin_session", JSON.stringify(adminSession));
    notice.style.color = "#2ecc71";
    notice.textContent = "✓ Yönetici girişi başarılı. Yönetim paneli açılıyor...";
    setTimeout(()=>{

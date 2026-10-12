@@ -287,7 +287,7 @@
 <script>
 (function(){
   try {
-    const s=JSON.parse(sessionStorage.getItem('tanriverdi_admin_session')||'null');
+    const s=JSON.parse(localStorage.getItem('tanriverdi_admin_session')||'null');
     const ok=s && (s.role==='admin'||s.rol==='admin'||s.yetki==='admin'||s.isAdmin===true);
     if(!ok){
       if(window.parent && window.parent!==window){ window.parent.postMessage({type:'tanriverdi-admin-required'}, '*'); }
@@ -618,7 +618,7 @@
         }
 
         window.yoneticiCikisYap = function() {
-            sessionStorage.removeItem('tanriverdi_admin_session');
+            localStorage.removeItem('tanriverdi_admin_session');
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({ type: 'tanriverdi-logout' }, '*');
             } else {
