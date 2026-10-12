@@ -1,6 +1,6 @@
 const PROJECT_ID = 'tanriverdidoner-a2641';
 const DB_URL = 'https://tanriverdidoner-a2641-default-rtdb.europe-west1.firebasedatabase.app';
-const APP_URL = 'https://ozbinici07-taahhutleri.github.io/tanriverdi/';
+const APP_URL = 'https://ozbinici07.github.io/tanriverdi/';
 
 function base64url(bytes) {
   let binary = '';
@@ -89,7 +89,7 @@ async function sendFcm(token, notification, data, accessToken) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS') return jsonResponse({},204);
+    if (request.method === 'OPTIONS') return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'POST,OPTIONS'}});
     if (url.pathname === '/') return new Response('Tanriverdi FCM Worker OK');
     if (url.pathname !== '/notify') return jsonResponse({ok:false,error:'Geçersiz endpoint'},404);
     if (request.method !== 'POST') return jsonResponse({ok:false,error:'POST gerekli'},405);

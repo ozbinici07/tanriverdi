@@ -59,7 +59,12 @@ async function tanriverdiLoadPushModule(){
 window.tanriverdiEnableAdminPush = async function(){
   if(tanriverdiPushBusy) return {ok:false,busy:true};
   tanriverdiPushBusy = true;
+  window.tanriverdiPushStatus = 'registering';
+  updatePushButton();
   try{
+    if(!('Notification' in window)) throw new Error('Bildirim desteği yok');
+    if(Notification.permission==='default') await Notification.requestPermission();
+    if(Notification.permission!=='granted') throw new Error('Bildirim izni verilmedi');
     const m = await tanriverdiLoadPushModule();
     const token = await m.enableAdminPush();
     window.tanriverdiPushStatus = 'enabled';
@@ -68,7 +73,7 @@ window.tanriverdiEnableAdminPush = async function(){
     console.warn('FCM kayıt/izin:', e);
     window.tanriverdiPushStatus = 'error';
     return {ok:false,error:String(e.message||e)};
-  }finally{ tanriverdiPushBusy=false; }
+  }finally{ tanriverdiPushBusy=false; updatePushButton(); }
 };
 window.tanriverdiDisableAdminPush = async function(){
   try{ const m=await tanriverdiLoadPushModule(); await m.disableAdminPush(); }catch(e){ console.warn('FCM kapatma:',e); }
@@ -117,7 +122,9 @@ const pushBtn=document.getElementById('pushBtn');
 function updatePushButton(){
   if(!pushBtn) return;
   const perm=('Notification' in window)?Notification.permission:'unsupported';
-  if(perm==='granted'){pushBtn.textContent='🔔 Bildirimler Açık';pushBtn.classList.add('ok');pushBtn.classList.remove('warn');}
+  if(perm==='granted' && window.tanriverdiPushStatus==='enabled'){pushBtn.textContent='🔔 Bildirimler Açık';pushBtn.classList.add('ok');pushBtn.classList.remove('warn');}
+  else if(window.tanriverdiPushStatus==='registering'){pushBtn.textContent='🔔 Bildirimler Bağlanıyor';pushBtn.classList.remove('ok');pushBtn.classList.remove('warn');}
+  else if(perm==='granted'){pushBtn.textContent=window.tanriverdiPushStatus==='error'?'⚠️ Bildirim Bağlantısını Yenile':'🔔 Bildirim Cihazını Kaydet';pushBtn.classList.remove('ok');pushBtn.classList.add('warn');}
   else if(perm==='denied'){pushBtn.textContent='🔕 Bildirim İzni Kapalı';pushBtn.classList.add('warn');pushBtn.classList.remove('ok');}
   else {pushBtn.textContent='🔔 Bildirimleri Aç';pushBtn.classList.remove('ok');pushBtn.classList.remove('warn');}
 }
@@ -129,7 +136,7 @@ if(pushBtn) pushBtn.addEventListener('click',async()=>{
   else if(r.error) alert('Bildirimler açılamadı: '+r.error);
 });
 updatePushButton();
-function loadAccordingToSession(){const s=session();if(isAdmin(s)){setActive(adminTab);loadEmbedded(adminTab==='admin'?decode(ADMIN_B64):decode(CUSTOMER_B64),'admin-'+adminTab,true)}else{setTabs(false);loadEmbedded(decode(CUSTOMER_B64),'customer',false)}}
+function loadAccordingToSession(){const s=session();if(isAdmin(s)){setActive(adminTab);loadEmbedded(adminTab==='admin'?decode(ADMIN_B64):decode(CUSTOMER_B64),'admin-'+adminTab,true);tanriverdiAutoPush()}else{setTabs(false);loadEmbedded(decode(CUSTOMER_B64),'customer',false)}}
 tabButtons.forEach(btn=>btn.addEventListener('click',()=>{if(!isAdmin(session()))return;adminTab=btn.dataset.tab;setActive(adminTab);loadEmbedded(adminTab==='admin'?decode(ADMIN_B64):decode(CUSTOMER_B64),'admin-'+adminTab,true)}));
 frame.addEventListener('load',()=>loading.classList.add('hide'));
 frame.addEventListener('error',()=>{loading.textContent='Tanrıverdi Döner açılamadı.'});
