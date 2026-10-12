@@ -1,6 +1,6 @@
 const PROJECT_ID = 'tanriverdidoner-a2641';
 const DB_URL = 'https://tanriverdidoner-a2641-default-rtdb.europe-west1.firebasedatabase.app';
-const APP_URL = 'https://ozbinici07.github.io/tanriverdi/';
+const APP_URL = 'https://tanriverdi.web.app/';
 
 function base64url(bytes) {
   let binary = '';
