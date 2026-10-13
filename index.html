@@ -59,7 +59,7 @@ function loadEmbedded(src,mode,showTabs){currentMode=mode;setTabs(showTabs);load
 let tanriverdiPushModule = null;
 let tanriverdiPushBusy = false;
 async function tanriverdiLoadPushModule(){
-  if(!tanriverdiPushModule) tanriverdiPushModule = await import('./push.js?v=2');
+  if(!tanriverdiPushModule) tanriverdiPushModule = await import('./push.js?v=4');
   return tanriverdiPushModule;
 }
 window.tanriverdiEnableAdminPush = async function(){
@@ -97,7 +97,7 @@ window.tanriverdiPrepareCustomerPush = async function(customerInfo={}){
     const appBase = new URL('./', location.href).href;
     const deviceId = customerInfo.deviceId || '';
     return await m.enableCustomerPush({permissionGranted:true, customerInfo, deviceId, swUrl:new URL('sw.js',appBase).href, swScope:appBase});
-  }catch(e){ console.warn('Müşteri FCM kayıt/izin:',e); return null; }
+  }catch(e){ console.warn('Müşteri FCM kayıt/izin:',e); return {errorCode:String(e.code||e.name||'unknown')}; }
 };
 window.tanriverdiNotifyOrderStatus = async function(orderId,status){
   const url = (localStorage.getItem('tanriverdi_push_sender_url') || 'https://tanriverdi-fcm.ozbinici07.workers.dev/notify').trim();
@@ -152,6 +152,6 @@ loadAccordingToSession();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 <script src="./account-view.js"></script>
-<script src="./status-recovery.js"></script>
+<script src="./status-recovery.js?v=4"></script>
 </body>
 </html>
