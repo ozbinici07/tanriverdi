@@ -37,11 +37,11 @@
           deviceId:localStorage.getItem('tanriverdi_push_device_id') || '',
           username:user?.username || '', name:user?.name || '', phone:user?.phone || ''
         });
-        if (!result?.token) throw Error('Bildirim kaydı oluşturulamadı.');
+        if (!result?.token) throw Object.assign(Error('Bildirim kaydı oluşturulamadı.'),{code:result?.errorCode||'registration-failed'});
         notice.textContent = '✓ Bu cihazda sipariş bildirimleri açık.';
         button.textContent = '🔔 Bildirim kaydını yenile';
       } catch (error) {
-        notice.textContent = 'Bildirimler bağlanamadı. İzni ve internet bağlantısını kontrol edip tekrar deneyin.';
+        const code=String(error.code||error.name||'unknown').replace(/[^a-zA-Z0-9/_-]/g,'').slice(0,100); notice.textContent = 'Bildirimler bağlanamadı. Hata kodu: '+code+' (Sürüm 4)';
       } finally {
         registrationBusy = false;
         button.disabled = false;
@@ -102,5 +102,14 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
   window.addEventListener('online', start);
   window.addEventListener('pageshow', start);
+  // External menu images can delay the iframe load event. Start when its UI exists.
+  let observedDocument;
+  setInterval(() => {
+    const doc = frame?.contentDocument;
+    if (doc && doc !== observedDocument && doc.getElementById('live-notification')) {
+      observedDocument = doc;
+      start();
+    }
+  }, 1000);
   start();
 })();
