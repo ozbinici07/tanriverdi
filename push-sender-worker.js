@@ -82,6 +82,7 @@ async function sendFcm(token, notification, data, accessToken) {
       data:{...data,url:APP_URL},
       webpush:{
         headers:{Urgency:'high'},
+        notification:{icon:APP_URL+'icon-192.png'},
         fcmOptions:{link:APP_URL}
       }
     }})
