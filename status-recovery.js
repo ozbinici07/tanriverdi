@@ -1,11 +1,64 @@
 (() => {
   const frame = document.getElementById('view');
   let timer, busy = false, generation = 0, pushRenewal;
+  let registrationBusy = false, automaticRegistration = false;
+  function prepareNotifications(doc) {
+    if (doc.getElementById('customer-push-controls')) return;
+    const host = doc.getElementById('authBoxContainer');
+    if (!host) return;
+    const controls = doc.createElement('div');
+    controls.id = 'customer-push-controls';
+    controls.style.cssText = 'padding:10px 0;';
+    const button = doc.createElement('button');
+    button.type = 'button';
+    button.textContent = '🔔 Sipariş bildirimlerini aç';
+    button.style.cssText = 'width:100%;padding:12px;border:0;border-radius:8px;background:#168c3a;color:white;cursor:pointer;font-weight:bold;';
+    const notice = doc.createElement('div');
+    notice.setAttribute('role', 'status');
+    notice.style.cssText = 'font-size:12px;margin-top:6px;';
+    controls.append(button, notice);
+    host.after(controls);
+    async function renew() {
+      if (registrationBusy) return;
+      if (!('Notification' in window)) {
+        notice.textContent = 'Bu tarayıcı bildirimleri desteklemiyor. Chrome ile açın.';
+        return;
+      }
+      if (Notification.permission === 'denied') {
+        notice.textContent = 'Bildirim izni kapalı. Tarayıcıda bu site için bildirimlere izin verip yeniden deneyin.';
+        return;
+      }
+      registrationBusy = true;
+      button.disabled = true;
+      notice.textContent = 'Bildirimler bağlanıyor…';
+      try {
+        const user = JSON.parse(localStorage.getItem('tanriverdi_logged_user') || 'null');
+        const result = await window.tanriverdiPrepareCustomerPush({
+          deviceId:localStorage.getItem('tanriverdi_push_device_id') || '',
+          username:user?.username || '', name:user?.name || '', phone:user?.phone || ''
+        });
+        if (!result?.token) throw Error('Bildirim kaydı oluşturulamadı.');
+        notice.textContent = '✓ Bu cihazda sipariş bildirimleri açık.';
+        button.textContent = '🔔 Bildirim kaydını yenile';
+      } catch (error) {
+        notice.textContent = 'Bildirimler bağlanamadı. İzni ve internet bağlantısını kontrol edip tekrar deneyin.';
+      } finally {
+        registrationBusy = false;
+        button.disabled = false;
+      }
+    }
+    button.addEventListener('click', renew);
+    if (!automaticRegistration && 'Notification' in window && Notification.permission === 'granted') {
+      automaticRegistration = true;
+      renew();
+    }
+  }
   function start() {
     clearInterval(timer);
     const current = ++generation;
     const doc = frame?.contentDocument;
     if (!doc?.getElementById('live-notification')) return;
+    prepareNotifications(doc);
     async function refresh() {
       if (document.hidden || busy) return;
       const id = localStorage.getItem('last_order_id');
