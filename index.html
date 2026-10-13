@@ -59,7 +59,7 @@ function loadEmbedded(src,mode,showTabs){currentMode=mode;setTabs(showTabs);load
 let tanriverdiPushModule = null;
 let tanriverdiPushBusy = false;
 async function tanriverdiLoadPushModule(){
-  if(!tanriverdiPushModule) tanriverdiPushModule = await import('./push.js');
+  if(!tanriverdiPushModule) tanriverdiPushModule = await import('./push.js?v=2');
   return tanriverdiPushModule;
 }
 window.tanriverdiEnableAdminPush = async function(){
@@ -152,5 +152,6 @@ loadAccordingToSession();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 <script src="./account-view.js"></script>
+<script src="./status-recovery.js"></script>
 </body>
 </html>
