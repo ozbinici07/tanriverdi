@@ -2,6 +2,7 @@ const PROJECT_ID = 'tanriverdidoner-a2641';
 const DB_URL = 'https://tanriverdidoner-a2641-default-rtdb.europe-west1.firebasedatabase.app';
 const APP_URL = 'https://tanriverdi.web.app/';
 
+
 function base64url(bytes) {
   let binary = '';
   for (const b of bytes) binary += String.fromCharCode(b);
@@ -24,7 +25,7 @@ async function getAccessToken(env) {
   const header = textBase64url(JSON.stringify({alg:'RS256',typ:'JWT'}));
   const claim = textBase64url(JSON.stringify({
     iss: env.FCM_SERVICE_ACCOUNT_EMAIL,
-    scope: 'https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/firebase.database',
+    scope: 'https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email',
     aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600
   }));
   const key = await crypto.subtle.importKey('pkcs8', privateKeyBytes(env.FCM_SERVICE_ACCOUNT_PRIVATE_KEY),
@@ -94,16 +95,19 @@ export default {
     if (url.pathname !== '/notify') return jsonResponse({ok:false,error:'Geçersiz endpoint'},404);
     if (request.method !== 'POST') return jsonResponse({ok:false,error:'POST gerekli'},405);
 
+
     try {
       const payload = await request.json();
       const orderId = payload?.orderId;
       const requestedStatus = payload?.status ? String(payload.status) : '';
       if (!orderId) return jsonResponse({ok:false,error:'orderId gerekli'},400);
 
+
       const accessToken = await getAccessToken(env);
       const safeOrderId = encodeURIComponent(String(orderId));
       const order = await databaseGet(`siparisler/${safeOrderId}`, accessToken);
       if (!order) return jsonResponse({ok:false,error:'Sipariş bulunamadı'},404);
+
 
       const status = requestedStatus || String(order.durum || 'yeni');
       const isCustomerStatus = !!requestedStatus && requestedStatus !== 'yeni';
@@ -111,6 +115,7 @@ export default {
       const sentPath = `bildirimGonderildi/${safeOrderId}/${kind}`;
       const sentBefore = await databaseGet(sentPath, accessToken);
       if (sentBefore) return jsonResponse({ok:true,duplicate:true,success:sentBefore.success||0});
+
 
       let tokens = [];
       if (isCustomerStatus) {
@@ -139,11 +144,13 @@ export default {
         tokens = Object.values(tokenData || {}).map(x=>x?.token).filter(x=>typeof x==='string' && x.length>0);
       }
 
+
       if (!tokens.length) {
         return jsonResponse({ok:false,success:0,error:isCustomerStatus
           ? 'Bu sipariş için kayıtlı müşteri bildirim tokenı yok.'
           : 'Kayıtlı yönetici FCM tokenı yok.'},409);
       }
+
 
       let notification, dataType;
       if (isCustomerStatus) {
@@ -161,6 +168,7 @@ export default {
         dataType = 'new-order';
       }
 
+
       let success=0, errors=[];
       for (const token of tokens) {
         const response = await sendFcm(token, notification, {
@@ -170,9 +178,11 @@ export default {
         else errors.push(await response.text());
       }
 
+
       if (success > 0) {
         await databasePut(sentPath,{sentAt:Date.now(),success,attempted:tokens.length},accessToken);
       }
+
 
       return jsonResponse({ok:success>0,success,attempted:tokens.length,errors:errors.slice(0,3)}, success>0 ? 200 : 502);
     } catch(error) {
